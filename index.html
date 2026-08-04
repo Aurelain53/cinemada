@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="mg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ciné Mada VF - Film Gasy HD</title>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #141414; color: #ffffff; padding: 20px; }
+        header { text-align: center; margin-bottom: 30px; padding-bottom: 15px; border-bottom: 2px solid #e50914; }
+        h1 { color: #e50914; font-size: 2.2rem; text-transform: uppercase; letter-spacing: 2px; }
+        p.subtitle { color: #aaa; font-size: 0.9rem; margin-top: 5px; }
+
+        /* Auth Box */
+        .auth-container { max-width: 500px; margin: 0 auto 30px auto; background: #222; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .auth-container input { width: 65%; padding: 12px; border: none; border-radius: 5px; font-size: 1rem; text-transform: uppercase; font-weight: bold; text-align: center; }
+        .auth-container button { padding: 12px 20px; background: #e50914; color: white; border: none; border-radius: 5px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        .auth-container button:hover { background: #b80710; }
+        #status-msg { margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+        .status-success { color: #4CAF50; }
+        .status-error { color: #f44336; }
+
+        /* Film Catalog Grid */
+        .film-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
+        .film-card { background: #1f1f1f; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; border: 1px solid #333; transition: transform 0.2s; }
+        .film-card:hover { transform: translateY(-5px); border-color: #e50914; }
+        .film-poster { width: 100%; height: 280px; object-fit: cover; background: #2a2a2a; }
+        .film-info { padding: 15px; text-align: center; }
+        .film-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; height: 45px; display: flex; align-items: center; justify-content: center; }
+        .btn-download { display: block; width: 100%; padding: 10px; background: #333; color: #888; text-decoration: none; border-radius: 5px; font-weight: bold; text-align: center; cursor: not-allowed; border: none; }
+        .btn-download.active { background: #e50914; color: white; cursor: pointer; }
+        .btn-download.active:hover { background: #b80710; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CINÉ MADA VF</h1>
+        <p class="subtitle">Espace Téléchargement Film Gasy ho an'ny Cybercafé</p>
+    </header>
+
+    <!-- Kazy Fampidirana Code -->
+    <div class="auth-container">
+        <h3>Mampidira Code Unique</h3>
+        <p style="font-size: 0.8rem; color: #ccc; margin-bottom: 15px;">Mba ahafahana mampiditra (télécharger) ireo film rehetra</p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <input type="text" id="access-code-input" placeholder="EX: RAKOTO-8921">
+            <button onclick="verifyCode()">Valider</button>
+        </div>
+        <div id="status-msg"></div>
+    </div>
+
+    <!-- Lisitry ny Film Gasy -->
+    <h2 style="max-width: 1200px; margin: 0 auto 20px auto; border-left: 4px solid #e50914; padding-left: 10px;">Catalogue Films HD</h2>
+    <div class="film-grid" id="film-catalog">
+        <p style="text-align: center; grid-column: 1/-1; color: #888;">Amboarina ny lisitry ny film...</p>
+    </div>
+
+    <script>
+        // --- CONFIGURATION SUPABASE ---
+        const SUPABASE_URL = "https://daoagqgxfzlsocukldph.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_kElDNa1IH0EkbzDVLNGxbg_ns1byA19";
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let isCodeValid = false;
+
+        // --- GENERATEUR DE DEVICE ID ---
+        function getDeviceId() {
+            let id = localStorage.getItem('cinema_device_id');
+            if (!id) {
+                id = 'DEV-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+                localStorage.setItem('cinema_device_id', id);
+            }
+            return id;
+        }
+
+        // --- FANAMARINANA NY CODE UNIQUE ---
+        async function verifyCode() {
+            const codeInput = document.getElementById('access-code-input').value.trim().toUpperCase();
+            const statusMsg = document.getElementById('status-msg');
+            const deviceId = getDeviceId();
+
+            if (!codeInput) {
+                statusMsg.className = "status-error";
+                statusMsg.innerText = "S'il vous plaît, ampidiro ny code-nao!";
+                return;
+            }
+
+            statusMsg.className = "";
+            statusMsg.innerText = "Mamarina ny code...";
+
+            const { data, error } = await supabaseClient
+                .from('access_codes')
+                .select('*')
+                .eq('code', codeInput)
+                .single();
+
+            if (error || !data) {
+                statusMsg.className = "status-error";
+                statusMsg.innerText = "Code tsy misy na tsy marina!";
+                lockDownloads();
+                return;
+            }
+
+            const now = new Date();
+            const expiresAt = new Date(data.expires_at);
+
+            if (!data.is_active || expiresAt < now) {
+                statusMsg.className = "status-error";
+                statusMsg.innerText = "Efa lany daty ity Code ity!";
+                lockDownloads();
+                return;
+            }
+
+            if (data.device_id && data.device_id !== deviceId) {
+                statusMsg.className = "status-error";
+                statusMsg.innerText = "Ity Code ity dia efa ampiasaina amin'ny fitaovana na PC hafa!";
+                lockDownloads();
+                return;
+            }
+
+            if (!data.device_id) {
+                await supabaseClient
+                    .from('access_codes')
+                    .update({ device_id: deviceId })
+                    .eq('id', data.id);
+            }
+
+            isCodeValid = true;
+            localStorage.setItem('saved_cinema_code', codeInput);
+            statusMsg.className = "status-success";
+            statusMsg.innerText = `Code Valide! Manankery hatramin'ny ${expiresAt.toLocaleDateString('fr-FR')}`;
+            unlockDownloads();
+        }
+
+        // --- AKAN'NY LISTE FILM AVY AMIN'NY SUPABASE ---
+        async function loadFilms() {
+            const catalog = document.getElementById('film-catalog');
+            const { data: films, error } = await supabaseClient
+                .from('films')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error || !films || films.length === 0) {
+                catalog.innerHTML = '<p style="text-align: center; grid-column: 1/-1; color: #888;">Mbola tsy misy film aloha hatreto.</p>';
+                return;
+            }
+
+            catalog.innerHTML = films.map(film => `
+                <div class="film-card">
+                    <img src="${film.poster_url || 'https://via.placeholder.com/200x280?text=No+Poster'}" class="film-poster" alt="${film.title}">
+                    <div class="film-info">
+                        <div class="film-title">${film.title}</div>
+                        <a href="${film.download_url}" target="_blank" class="btn-download ${isCodeValid ? 'active' : ''}" onclick="checkDownloadAccess(event)">
+                            ${isCodeValid ? '⬇ TÉLÉCHARGER' : '🔒 Locked'}
+                        </a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function unlockDownloads() {
+            document.querySelectorAll('.btn-download').forEach(btn => {
+                btn.classList.add('active');
+                btn.innerText = '⬇ TÉLÉCHARGER';
+            });
+        }
+
+        function lockDownloads() {
+            isCodeValid = false;
+            document.querySelectorAll('.btn-download').forEach(btn => {
+                btn.classList.remove('active');
+                btn.innerText = '🔒 Locked';
+            });
+        }
+
+        function checkDownloadAccess(event) {
+            if (!isCodeValid) {
+                event.preventDefault();
+                alert("Mampidira Code Unique marina aloha mba hahafahanao mampiditra ity film ity!");
+            }
+        }
+
+        window.onload = async () => {
+            await loadFilms();
+            const savedCode = localStorage.getItem('saved_cinema_code');
+            if (savedCode) {
+                document.getElementById('access-code-input').value = savedCode;
+                verifyCode();
+            }
+        };
+    </script>
+</body>
+      </html>
