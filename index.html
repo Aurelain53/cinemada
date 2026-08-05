@@ -481,7 +481,7 @@
 
             // Requête dans Supabase (table access_codes)
             const { data, error } = await _supabase
-                .from('access_codes')
+                .from('codes')
                 .select('*')
                 .eq('code', userCode)
                 .single();
