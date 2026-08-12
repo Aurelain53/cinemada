@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>CINÉ MADA</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+    font-family:Segoe UI,Tahoma,sans-serif;
+    -webkit-tap-highlight-color:transparent;
+}
+
+body{
+    background:
+    radial-gradient(circle at top,#292929,#111 45%,#070707);
+    color:#fff;
+    min-height:100vh;
+    padding:12px 10px 30px;
+}
+
+header{
+    max-width:900px;
+    margin:auto auto 15px;
+    text-align:center;
+    padding:16px 10px 12px;
+    border-radius:15px;
+    background:#151515;
+    border:1px solid #292929;
+}
+
+.logo{
+    color:#e50914;
+    font-size:1.8rem;
+    font-weight:900;
+    letter-spacing:2px;
+}
+
+.subtitle{
+    color:#999;
+    font-size:.73rem;
+    margin-top:3px;
+}
+
+.line{
+    width:65px;
+    height:3px;
+    background:#e50914;
+    margin:9px auto 0;
+    border-radius:10px;
+}
+
+/* AUTH */
+
+.auth{
+    max-width:430px;
+    margin:auto auto 16px;
+    padding:18px;
+    background:#1d1d1d;
+    border:1px solid #333;
+    border-radius:16px;
+    text-align:center;
+}
+
+.auth-icon{
+    width:44px;
+    height:44px;
+    margin:auto auto 8px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background:#e50914;
+    font-size:20px;
+}
+
+.auth h2{
+    font-size:1rem;
+}
+
+.auth p{
+    color:#999;
+    font-size:.72rem;
+    margin:5px 0 12px;
+}
+
+.input-group{
+    display:flex;
+    gap:7px;
+}
+
+.input-code{
+    flex:1;
+    min-width:0;
+    padding:10px;
+    border-radius:9px;
+    border:1px solid #3a3a3a;
+    background:#111;
+    color:#fff;
+    outline:none;
+}
+
+.btn{
+    border:0;
+    border-radius:9px;
+    padding:10px 14px;
+    background:#e50914;
+    color:#fff;
+    font-weight:800;
+    cursor:pointer;
+}
+
+.status{
+    margin-top:9px;
+    font-size:.74rem;
+    font-weight:bold;
+}
+
+/* TOP */
+
+.top{
+    max-width:900px;
+    margin:auto auto 15px;
+    display:flex;
+    gap:7px;
+}
+
+.search{
+    flex:1;
+    display:flex;
+    align-items:center;
+    background:#202020;
+    border:1px solid #333;
+    border-radius:13px;
+    padding:5px 6px 5px 12px;
+}
+
+.search span{
+    margin-right:7px;
+    color:#777;
+}
+
+.search input{
+    width:100%;
+    border:0;
+    outline:0;
+    background:transparent;
+    color:#fff;
+    font-size:.82rem;
+}
+
+.search button{
+    border:0;
+    border-radius:9px;
+    padding:7px 10px;
+    background:#10b981;
+    color:#fff;
+    font-weight:bold;
+    font-size:.7rem;
+}
+
+.refresh{
+    display:none;
+    border:1px solid #333;
+    background:#222;
+    color:#fff;
+    border-radius:10px;
+    padding:8px 10px;
+    font-weight:bold;
+}
+
+.refresh.show{
+    display:block;
+}
+
+/* CATALOG */
+
+.catalog{
+    max-width:900px;
+    margin:auto;
+}
+
+.heading{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+.heading h2{
+    font-size:1rem;
+    border-left:3px solid #e50914;
+    padding-left:8px;
+}
+
+.count{
+    color:#777;
+    font-size:.68rem;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+}
+
+.card{
+    cursor:pointer;
+    min-width:0;
+}
+
+.poster{
+    position:relative;
+    width:100%;
+    padding-top:145%;
+    overflow:hidden;
+    border-radius:8px;
+    background:#252525;
+}
+
+.poster img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+}
+
+.badge{
+    position:absolute;
+    left:5px;
+    bottom:5px;
+    background:#e50914;
+    padding:3px 6px;
+    border-radius:5px;
+    font-size:.57rem;
+    font-weight:bold;
+}
+
+.title{
+    margin-top:5px;
+    color:#ddd;
+    font-size:.7rem;
+    line-height:1.2;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+}
+
+/* MODAL */
+
+.modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.85);
+    backdrop-filter:blur(5px);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:1000;
+}
+
+.modal-box{
+    width:100%;
+    max-width:520px;
+    max-height:82vh;
+    overflow:auto;
+    padding:18px;
+    background:#1b1b1b;
+    border:1px solid #333;
+    border-radius:18px 18px 0 0;
+}
+
+@media(min-width:600px){
+    .modal{
+        align-items:center;
+    }
+
+    .modal-box{
+        border-radius:18px;
+    }
+}
+
+.modal-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding-bottom:12px;
+    margin-bottom:12px;
+    border-bottom:1px solid #333;
+}
+
+.modal-title{
+    font-weight:800;
+}
+
+.close{
+    width:32px;
+    height:32px;
+    border:0;
+    border-radius:50%;
+    background:#303030;
+    color:#fff;
+    font-size:20px;
+}
+
+.episodes{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.episode{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px;
+    border-radius:10px;
+    background:#252525;
+    border:1px solid #333;
+}
+
+.episode-name{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:.78rem;
+}
+
+.download{
+    flex-shrink:0;
+    border:0;
+    border-radius:7px;
+    padding:7px 10px;
+    background:#10b981;
+    color:#fff;
+    font-size:.68rem;
+    font-weight:bold;
+}
+
+.loading,
+.empty{
+    grid-column:1/-1;
+    text-align:center;
+    padding:30px 10px;
+    color:#777;
+    font-size:.8rem;
+}
+
+.spinner{
+    width:24px;
+    height:24px;
+    margin:auto auto 8px;
+    border:3px solid #333;
+    border-top-color:#e50914;
+    border-radius:50%;
+    animation:spin .8s linear infinite;
+}
+
+@keyframes spin{
+    to{transform:rotate(360deg)}
+}
+
+@media(max-width:420px){
+    .grid{gap:6px}
+    .title{font-size:.66rem}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">CINÉ MADA</div>
+    <div class="subtitle">
+        Votre espace cinéma à Madagascar
+    </div>
+    <div class="line"></div>
+</header>
+
+<!-- AUTH -->
+
+<div id="authBox" class="auth">
+
+    <div class="auth-icon">🔐</div>
+
+    <h2>Entrez votre code d'accès</h2>
+
+    <p>
+        Votre code est nécessaire pour accéder aux téléchargements.
+    </p>
+
+    <div class="input-group">
+
+        <input
+            id="codeInput"
+            class="input-code"
+            type="text"
+            placeholder="Votre code d'accès"
+            autocomplete="off"
+        >
+
+        <button
+            class="btn"
+            onclick="checkCode()"
+        >
+            Valider
+        </button>
+
+    </div>
+
+    <div
+        id="statusMsg"
+        class="status"
+    ></div>
+
+</div>
+
+<!-- TOP -->
+
+<div class="top">
+
+    <div class="search">
+
+        <span>🔍</span>
+
+        <input
+            id="searchInput"
+            type="text"
+            placeholder="Rechercher un film..."
+            oninput="filterFilms()"
+        >
+
+        <button onclick="filterFilms()">
+            Rechercher
+        </button>
+
+    </div>
+
+    <button
+        id="refreshBtn"
+        class="refresh"
+        onclick="refreshCatalogue()"
+    >
+        🔄
+    </button>
+
+</div>
+
+<!-- CATALOG -->
+
+<div class="catalog">
+
+    <div class="heading">
+
+        <h2>Films & Séries HD</h2>
+
+        <span
+            id="catalogCount"
+            class="count"
+        ></span>
+
+    </div>
+
+    <div
+        id="filmContainer"
+        class="grid"
+    >
+
+        <div class="loading">
+            <div class="spinner"></div>
+            Chargement du catalogue...
+        </div>
+
+    </div>
+
+</div>
+
+<!-- MODAL -->
+
+<div
+    id="episodeModal"
+    class="modal"
+    onclick="closeOuter(event)"
+>
+
+    <div class="modal-box">
+
+        <div class="modal-head">
+
+            <div
+                id="modalTitle"
+                class="modal-title"
+            >
+                Film
+            </div>
+
+            <button
+                class="close"
+                onclick="closeModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+        <div
+            id="episodeContainer"
+            class="episodes"
+        ></div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =====================================================
+   SUPABASE
+===================================================== */
+
+const SUPABASE_URL =
+'https://daoagqgxfzlsocukldph.supabase.co';
+
+const SUPABASE_KEY =
+'sb_publishable_kElDNa1IH0EkbzDVLNGxbg_ns1byA19';
+
+const db =
+supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+);
+
+
+/* =====================================================
+   VARIABLES
+===================================================== */
+
+let groupedFilms = {};
+let isCodeValid = false;
+let accessToken = '';
+
+const CACHE_KEY =
+'cine_mada_catalogue_v3';
+
+const CACHE_DURATION =
+24 * 60 * 60 * 1000;
+
+
+/* =====================================================
+   TITLE
+===================================================== */
+
+function getBaseTitle(title){
+
+    return title
+        .replace(
+            /\s+(partie|part|épisode|ep|vol|volume|\d+)$/i,
+            ''
+        )
+        .trim();
+
+}
+
+
+/* =====================================================
+   CACHE
+===================================================== */
+
+function saveCache(data){
+
+    try{
+
+        localStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({
+                timestamp:Date.now(),
+                data:data
+            })
+        );
+
+    }catch(e){}
+
+}
+
+
+function getCache(){
+
+    try{
+
+        const raw =
+        localStorage.getItem(
+            CACHE_KEY
+        );
+
+        if(!raw)
+            return null;
+
+        const obj =
+        JSON.parse(raw);
+
+        if(
+            Date.now()-obj.timestamp
+            >
+            CACHE_DURATION
+        ){
+
+            localStorage.removeItem(
+                CACHE_KEY
+            );
+
+            return null;
+        }
+
+        return obj.data;
+
+    }catch(e){
+
+        return null;
+    }
+
+}
+
+
+/* =====================================================
+   LOAD CATALOGUE
+===================================================== */
+
+async function fetchFilms(
+    force=false
+){
+
+    if(!force){
+
+        const cached =
+        getCache();
+
+        if(cached){
+
+            buildCatalogue(
+                cached
+            );
+
+            return;
+        }
+
+    }
+
+    const container =
+    document.getElementById(
+        'filmContainer'
+    );
+
+    container.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            Chargement du catalogue...
+        </div>
+    `;
+
+
+    const {
+        data,
+        error
+    } =
+    await db.rpc(
+        'get_public_catalogue'
+    );
+
+
+    if(error){
+
+        console.error(error);
+
+        container.innerHTML =
+        '<div class="empty">' +
+        'Erreur de chargement.' +
+        '</div>';
+
+        return;
+    }
+
+
+    if(!data || !data.length){
+
+        container.innerHTML =
+        '<div class="empty">' +
+        'Aucun film disponible.' +
+        '</div>';
+
+        return;
+    }
+
+
+    saveCache(data);
+
+    buildCatalogue(data);
+}
+
+
+/* =====================================================
+   BUILD
+===================================================== */
+
+function buildCatalogue(films){
+
+    groupedFilms = {};
+
+
+    films.forEach(
+        film => {
+
+            const base =
+            getBaseTitle(
+                film.title
+            );
+
+
+            if(!groupedFilms[base]){
+
+                groupedFilms[base] = {
+
+                    mainTitle:base,
+
+                    posterUrl:
+                    film.poster_url,
+
+                    firstId:
+                    film.id,
+
+                    count:1
+
+                };
+
+            }else{
+
+                groupedFilms[base].count++;
+
+            }
+
+        }
+    );
+
+
+    renderFilms(
+        Object.keys(groupedFilms)
+    );
+}
+
+
+/* =====================================================
+   RENDER
+===================================================== */
+
+function renderFilms(keys){
+
+    const container =
+    document.getElementById(
+        'filmContainer'
+    );
+
+    container.innerHTML='';
+
+    document.getElementById(
+        'catalogCount'
+    ).textContent =
+    keys.length + ' titres';
+
+
+    if(!keys.length){
+
+        container.innerHTML =
+        '<div class="empty">' +
+        'Aucun résultat trouvé.' +
+        '</div>';
+
+        return;
+    }
+
+
+    keys.forEach(
+        key => {
+
+            const film =
+            groupedFilms[key];
+
+
+            const card =
+            document.createElement(
+                'div'
+            );
+
+            card.className='card';
+
+
+            card.onclick =
+            () => openModal(
+                film.firstId,
+                film.mainTitle
+            );
+
+
+            card.innerHTML = `
+
+                <div class="poster">
+
+                    ${
+                        film.posterUrl
+                        ?
+                        `<img
+                            src="${escapeHtml(film.posterUrl)}"
+                            alt="${escapeHtml(film.mainTitle)}"
+                            loading="lazy"
+                            decoding="async"
+                        >`
+                        :
+                        ''
+                    }
+
+                    ${
+                        film.count > 1
+                        ?
+                        `<span class="badge">
+                            ${film.count} Épisodes
+                        </span>`
+                        :
+                        ''
+                    }
+
+                </div>
+
+                <div class="title">
+                    ${escapeHtml(film.mainTitle)}
+                </div>
+            `;
+
+
+            container.appendChild(card);
+
+        }
+    );
+}
+
+
+/* =====================================================
+   MODAL / EPISODES
+===================================================== */
+
+async function openModal(
+    filmId,
+    title
+){
+
+    document.getElementById(
+        'modalTitle'
+    ).textContent =
+    title;
+
+
+    const modal =
+    document.getElementById(
+        'episodeModal'
+    );
+
+    modal.style.display='flex';
+
+
+    const container =
+    document.getElementById(
+        'episodeContainer'
+    );
+
+
+    container.innerHTML = `
+        <div class="loading">
+            <div class="spinner"></div>
+            Chargement des épisodes...
+        </div>
+    `;
+
+
+    if(!isCodeValid){
+
+        container.innerHTML =
+        '<div class="empty">' +
+        '🔒 Veuillez d’abord valider votre code d’accès.' +
+        '</div>';
+
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+    await db.rpc(
+        'get_film_episodes',
+        {
+            p_film_id:filmId,
+            p_access_token:accessToken
+        }
+    );
+
+
+    if(error || !data){
+
+        container.innerHTML =
+        '<div class="empty">' +
+        'Impossible de charger les épisodes.' +
+        '</div>';
+
+        return;
+    }
+
+
+    if(!data.length){
+
+        container.innerHTML =
+        '<div class="empty">' +
+        'Aucun épisode disponible.' +
+        '</div>';
+
+        return;
+    }
+
+
+    container.innerHTML='';
+
+
+    data.forEach(
+        (episode,index) => {
+
+            const item =
+            document.createElement(
+                'div'
+            );
+
+            item.className='episode';
+
+
+            const name =
+            episode.title ||
+            `Épisode ${index+1}`;
+
+
+            item.innerHTML = `
+
+                <span class="episode-name">
+                    ${escapeHtml(name)}
+                </span>
+
+                <button
+                    class="download"
+                    onclick="downloadFilm(
+                        '${escapeJs(episode.download_url)}'
+                    )"
+                >
+                    📥 Télécharger
+                </button>
+            `;
+
+
+            container.appendChild(item);
+
+        }
+    );
+}
+
+
+/* =====================================================
+   CODE
+===================================================== */
+
+async function checkCode(){
+
+    const input =
+    document.getElementById(
+        'codeInput'
+    );
+
+    const msg =
+    document.getElementById(
+        'statusMsg'
+    );
+
+    const code =
+    input.value.trim();
+
+
+    if(!code){
+
+        msg.style.color='#e50914';
+
+        msg.textContent =
+        'Veuillez saisir votre code d’accès.';
+
+        return;
+    }
+
+
+    msg.style.color='#aaa';
+
+    msg.textContent =
+    'Vérification en cours...';
+
+
+    const {
+        data,
+        error
+    } =
+    await db.rpc(
+        'validate_access_code',
+        {
+            p_code:code
+        }
+    );
+
+
+    if(
+        error ||
+        !data ||
+        !data[0] ||
+        !data[0].success
+    ){
+
+        msg.style.color='#e50914';
+
+        msg.textContent =
+        data?.[0]?.message ||
+        'Code invalide ou expiré.';
+
+        return;
+    }
+
+
+    isCodeValid=true;
+
+    accessToken =
+    data[0].access_token;
+
+
+    document.getElementById(
+        'authBox'
+    ).style.display='none';
+
+
+    document.getElementById(
+        'refreshBtn'
+    ).classList.add('show');
+
+
+    msg.style.color='#10b981';
+
+    msg.textContent =
+    'Accès autorisé.';
+
+
+    alert(
+        '✅ Code validé avec succès !'
+    );
+}
+
+
+/* =====================================================
+   DOWNLOAD
+===================================================== */
+
+function downloadFilm(url){
+
+    if(!isCodeValid){
+
+        alert(
+            'Accès refusé.'
+        );
+
+        return;
+    }
+
+
+    if(!url)
+        return;
+
+
+    window.open(
+        url,
+        '_blank',
+        'noopener,noreferrer'
+    );
+}
+
+
+/* =====================================================
+   SEARCH
+===================================================== */
+
+function filterFilms(){
+
+    const term =
+    document.getElementById(
+        'searchInput'
+    ).value
+    .toLowerCase()
+    .trim();
+
+
+    const keys =
+    Object.keys(
+        groupedFilms
+    ).filter(
+        key =>
+        key.toLowerCase()
+        .includes(term)
+    );
+
+
+    renderFilms(keys);
+}
+
+
+/* =====================================================
+   REFRESH
+===================================================== */
+
+function refreshCatalogue(){
+
+    localStorage.removeItem(
+        CACHE_KEY
+    );
+
+    fetchFilms(true);
+}
+
+
+/* =====================================================
+   CLOSE MODAL
+===================================================== */
+
+function closeModal(){
+
+    document.getElementById(
+        'episodeModal'
+    ).style.display='none';
+}
+
+
+function closeOuter(e){
+
+    if(
+        e.target.id ===
+        'episodeModal'
+    ){
+
+        closeModal();
+    }
+}
+
+
+/* =====================================================
+   ESCAPE
+===================================================== */
+
+function escapeHtml(text){
+
+    const div =
+    document.createElement('div');
+
+    div.textContent =
+    text || '';
+
+    return div.innerHTML;
+}
+
+
+function escapeJs(text){
+
+    return String(text || '')
+        .replace(/\\/g,'\\\\')
+        .replace(/'/g,"\\'")
+        .replace(/\n/g,'\\n')
+        .replace(/\r/g,'\\r');
+}
+
+
+/* =====================================================
+   START
+===================================================== */
+
+fetchFilms();
+
+</script>
+
+</body>
+</html>
